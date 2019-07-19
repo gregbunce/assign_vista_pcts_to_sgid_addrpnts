@@ -1,7 +1,7 @@
 import arcpy
 from arcpy import env
 import datetime
-#import arcgisscripting
+import csv
 
 # get date variables
 now = datetime.datetime.now()
@@ -12,6 +12,8 @@ hour = now.hour
 min = now.minute
 formatted_date = str(year) + str(month) + str(day)
 
+#arcpy.env.overwriteOutput = True
+
 # global variables
 sgid_addrspnts = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.gov.sde/SGID10.LOCATION.AddressPoints'
 sgid_vista_boundaries = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.gov.sde/SGID10.POLITICAL.VistaBallotAreas'
@@ -19,11 +21,12 @@ sgid_census_place_names = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.go
 
 # create a new file geodatabase with today's date
 print "Create the file geodatabase"
-arcpy.CreateFileGDB_management("D:/vista/agrc_addrpnts_with_vista_ballot_precincts", "SgidPntsVistaPcts_" + formatted_date + ".gdb", "9.2")
-arcpy.env.workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidPntsVistaPcts_" + formatted_date + ".gdb"
-local_workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidPntsVistaPcts_" + formatted_date + ".gdb"
+arcpy.CreateFileGDB_management("D:/vista/agrc_addrpnts_with_vista_ballot_precincts", "SgidAddrPntsVistaPcts" + formatted_date + ".gdb", "9.2")
+arcpy.env.workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidAddrPntsVistaPcts" + formatted_date + ".gdb"
+local_workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidAddrPntsVistaPcts" + formatted_date + ".gdb"
 
 # import the sgid address points for the desired counties (using where clause)
+# to run multiple counties use a where clause like this: 'CountyID = 49057, 49035, 49043' 
 county_where_clause = 'CountyID = 49057'
 print "Import the Address Points into fgdb with the where clause: " + county_where_clause
 arcpy.FeatureClassToFeatureClass_conversion(sgid_addrspnts, local_workspace, "sgid_addrpnts", county_where_clause)
@@ -49,13 +52,48 @@ print "Begin adding the value Unincorporated when there is no City value"
 arcpy.CalculateField_management(in_table="sgid_addrpnts_vista_placenames", field="City", expression="addUnincorporated( !City! )", expression_type="PYTHON_9.3", code_block="""def addUnincorporated(city):\n   if city == "":\n      city = "Unincorporated"\n   return city\n""")
 
 # export to table and rename and remove fields
-print "export the feature class to a fgdb table"
-arcpy.TableToTable_conversion(in_rows="sgid_addrpnts_vista_placenames", out_path="D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidPntsVistaPcts_2019719.gdb", out_name="finished_table_for_export", where_clause="", field_mapping="""HouseNumber "Address Number" true true false 10 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,AddNum,-1,-1;PrefixDir "Prefix Direction" true true false 1 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PrefixDir,-1,-1;StreetType "Street Type" true true false 4 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,StreetType,-1,-1;Building "Building" true true false 75 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,Building,-1,-1;UnitType "Unit Type" true true false 20 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,UnitType,-1,-1;UnitID "Unit ID" true true false 20 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,UnitID,-1,-1;City "City" true true false 30 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,City,-1,-1;Zip "Zip Code" true true false 5 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,ZipCode,-1,-1;AddressType "Point Type" true true false 15 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PtType,-1,-1;CountyID "CountyID" true true false 2 Short 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,CountyID_1,-1,-1;Precinct "Precinct" true true false 6 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PrecinctID,-1,-1;SubPrecinct "SubPrecinct" true true false 4 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,SubPrecinctID,-1,-1;CensusPlaceName2010 "pop_place" true true false 50 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PLACENAME,-1,-1;StreetName "StreetName" true true false 50 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,StreetNameStreetSuffx,-1,-1""", config_keyword="")
+print "Export the feature class to table"
+# arcpy.TableToTable_conversion(in_rows="sgid_addrpnts_vista_placenames", out_path="D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidPntsVistaPcts_2019719.gdb", out_name="table_for_export", where_clause="", field_mapping="""HouseNumber "Address Number" true true false 10 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,AddNum,-1,-1;PrefixDir "Prefix Direction" true true false 1 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PrefixDir,-1,-1;StreetType "Street Type" true true false 4 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,StreetType,-1,-1;UnitType "Unit Type" true true false 20 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,UnitType,-1,-1;UnitID "Unit ID" true true false 20 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,UnitID,-1,-1;City "City" true true false 30 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,City,-1,-1;Zip "Zip Code" true true false 5 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,ZipCode,-1,-1;AddressType "Point Type" true true false 15 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PtType,-1,-1;CountyID "CountyID" true true false 2 Short 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,CountyID_1,-1,-1;Precinct "Precinct" true true false 6 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PrecinctID,-1,-1;SubPrecinct "SubPrecinct" true true false 4 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,SubPrecinctID,-1,-1;Placename "pop_place" true true false 50 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PLACENAME,-1,-1;StreetName "StreetName" true true false 50 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,StreetNameStreetSuffx,-1,-1""", config_keyword="")
+arcpy.TableToTable_conversion("sgid_addrpnts_vista_placenames", local_workspace, "table_for_export")
+
+# remove a few fields in the table
+print "Remove a few fields in the table"
+arcpy.DeleteField_management("table_for_export", ["FID_sgid_addrpnts_vista", "FID_sgid_addrpnts", "AddSystem", "UTAddPtID", "FullAdd", "AddNumSuffix", "StreetName", "SuffixDir", "LandmarkName", "Building", "CountyID", "State", "PtLocation", "Structure", "ParcelID", "AddSource", "LoadDate", "USNG", "FID_VistaBallotAreas", "VistaID", "VersionNbr", "EffectiveDate", "AliasName", "Comments", "RcvdDate", "FID_UnIncorpAreas2010_Approx", "CountyNbr"])
+
+# upgrade geodatabase to 10.0 or greater (to allow for the alter field tool to run)
+print "Upgrade geodatbase so we can run .AlterField tool - which requires newer fgdb"
+arcpy.UpgradeGDB_management(local_workspace, input_prerequisite_check="PREREQUISITE_CHECK", input_upgradegdb_check="UPGRADE")
+
+# rename a few field names in the table
+print "Rename a few field names in the table"
+arcpy.AlterField_management("table_for_export", 'AddNum', 'HouseNumber')
+arcpy.AlterField_management("table_for_export", 'StreetNameStreetSuffx', 'StreetName', 'StreetName')
+arcpy.AlterField_management("table_for_export", 'ZipCode', 'Zip', 'Zip')
+arcpy.AlterField_management("table_for_export", 'CountyID_1', 'CountyID', 'CountyID')
+arcpy.AlterField_management("table_for_export", 'PrecinctID', 'Precinct', 'Precinct')
+arcpy.AlterField_management("table_for_export", 'SubPrecinctID', 'SubPrecinct', 'SubPrecinct')
+arcpy.AlterField_management("table_for_export", 'PLACENAME', 'CensusPlace', 'CensusPlace')
+
 
 # export the table to a text file
 print "export table to text file"
-arcpy.TableToTable_conversion(local_workspace + "/finished_table_for_export", r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts", "WeberAddrPnts_test.txt")
+# this method seems to give all OIDs a -1 value: arcpy.TableToTable_conversion(local_workspace + "/table_for_export", r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts", "SGIDAddrPntsVistaPcts" + formatted_date + ".csv")
 
+input_fct = local_workspace + "/table_for_export"
+output_csv = r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SGIDAddrPntsVistaPcts" + formatted_date + ".csv"
+csv_delimiter = ","
+
+fld_list = arcpy.ListFields(input_fct)
+fld_names = [fld.name for fld in fld_list]
+
+# Open the CSV file and write out field names and data
+with open(output_csv, 'wb') as csv_file:
+  writer = csv.writer(csv_file, delimiter=csv_delimiter)
+  writer.writerow(fld_names)
+  with arcpy.da.SearchCursor(input_fct, fld_names) as cursor:
+    for row in cursor:
+      writer.writerow(row)
+  csv_file.close()
 
 
 print "Done!"
