@@ -39,13 +39,13 @@ arcpy.Identity_analysis("sgid_addrpnts", sgid_vista_boundaries, "sgid_addrpnts_v
 print "Run Identity with census place names" 
 arcpy.Identity_analysis("sgid_addrpnts_vista", sgid_census_place_names, "sgid_addrpnts_vista_placenames")
 
-# add field to create the address name field (Street Name + Street Suffix)
-print "Add StreetName + StreetSuffix field"
-arcpy.AddField_management("sgid_addrpnts_vista_placenames", "StreetNameStreetSuffx", "TEXT", "", "", 50)
+# # add field to create the address name field (Street Name + Street Suffix)
+# print "Add StreetName + StreetSuffix field"
+# arcpy.AddField_management("sgid_addrpnts_vista_placenames", "StreetNameStreetSuffx", "TEXT", "", "", 50)
 
-# calculate over street name and street suffix to the new field
-print "Begin calculating street name and street suffix values to the new field"
-arcpy.CalculateField_management(in_table="sgid_addrpnts_vista_placenames", field="StreetNameStreetSuffx", expression="combineValues( !StreetName!, !SuffixDir!)", expression_type="PYTHON_9.3", code_block="""def combineValues(streetname, streetsuffix):\n   fullname = streetname\n   if len(streetsuffix) > 0:\n      fullname = fullname + " " + streetsuffix\n   return fullname\n""")
+# # calculate over street name and street suffix to the new field
+# print "Begin calculating street name and street suffix values to the new field"
+# arcpy.CalculateField_management(in_table="sgid_addrpnts_vista_placenames", field="StreetNameStreetSuffx", expression="combineValues( !StreetName!, !SuffixDir!)", expression_type="PYTHON_9.3", code_block="""def combineValues(streetname, streetsuffix):\n   fullname = streetname\n   if len(streetsuffix) > 0:\n      fullname = fullname + " " + streetsuffix\n   return fullname\n""")
 
 # add the value "Unincorporated" when there is no City value
 print "Begin adding the value Unincorporated when there is no City value"
@@ -58,16 +58,16 @@ arcpy.TableToTable_conversion("sgid_addrpnts_vista_placenames", local_workspace,
 
 # remove a few fields in the table
 print "Remove a few fields in the table"
-arcpy.DeleteField_management("table_for_export", ["FID_sgid_addrpnts_vista", "FID_sgid_addrpnts", "AddSystem", "UTAddPtID", "FullAdd", "AddNumSuffix", "StreetName", "SuffixDir", "LandmarkName", "Building", "CountyID", "State", "PtLocation", "Structure", "ParcelID", "AddSource", "LoadDate", "USNG", "FID_VistaBallotAreas", "VistaID", "VersionNbr", "EffectiveDate", "AliasName", "Comments", "RcvdDate", "FID_UnIncorpAreas2010_Approx", "CountyNbr"])
+arcpy.DeleteField_management("table_for_export", ["FID_sgid_addrpnts_vista", "FID_sgid_addrpnts", "AddSystem", "UTAddPtID", "FullAdd", "AddNumSuffix", "LandmarkName", "Building", "CountyID", "State", "PtLocation", "Structure", "ParcelID", "AddSource", "LoadDate", "USNG", "FID_VistaBallotAreas", "VistaID", "VersionNbr", "EffectiveDate", "AliasName", "Comments", "RcvdDate", "FID_UnIncorpAreas2010_Approx", "CountyNbr"])
 
 # upgrade geodatabase to 10.0 or greater (to allow for the alter field tool to run)
-print "Upgrade geodatbase so we can run .AlterField tool - which requires newer fgdb"
+print "Upgrading geodatbase so we can run .AlterField tool - which requires newer fgdb"
 arcpy.UpgradeGDB_management(local_workspace, input_prerequisite_check="PREREQUISITE_CHECK", input_upgradegdb_check="UPGRADE")
 
 # rename a few field names in the table
 print "Rename a few field names in the table"
 arcpy.AlterField_management("table_for_export", 'AddNum', 'HouseNumber')
-arcpy.AlterField_management("table_for_export", 'StreetNameStreetSuffx', 'StreetName', 'StreetName')
+# arcpy.AlterField_management("table_for_export", 'StreetNameStreetSuffx', 'StreetName', 'StreetName')
 arcpy.AlterField_management("table_for_export", 'ZipCode', 'Zip', 'Zip')
 arcpy.AlterField_management("table_for_export", 'CountyID_1', 'CountyID', 'CountyID')
 arcpy.AlterField_management("table_for_export", 'PrecinctID', 'Precinct', 'Precinct')
@@ -90,10 +90,19 @@ fld_names = [fld.name for fld in fld_list]
 with open(output_csv, 'wb') as csv_file:
   writer = csv.writer(csv_file, delimiter=csv_delimiter)
   writer.writerow(fld_names)
+  
   with arcpy.da.SearchCursor(input_fct, fld_names) as cursor:
     for row in cursor:
       writer.writerow(row)
   csv_file.close()
+
+  # cursor = arcpy.SearchCursor(input_fct)
+  # row = cursor.next()
+  # while row:
+  #   writer.writerow(row)
+  #   row = cursor.next()
+  # csv_file.close()  
+
 
 
 print "Done!"
