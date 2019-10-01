@@ -21,13 +21,13 @@ sgid_census_place_names = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.go
 
 # create a new file geodatabase with today's date
 print "Create the file geodatabase"
-arcpy.CreateFileGDB_management("D:/vista/agrc_addrpnts_with_vista_ballot_precincts", "SgidAddrPntsVistaPcts" + formatted_date + ".gdb", "9.2")
-arcpy.env.workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidAddrPntsVistaPcts" + formatted_date + ".gdb"
-local_workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidAddrPntsVistaPcts" + formatted_date + ".gdb"
+arcpy.CreateFileGDB_management("C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts", "SgidAddrPntsVistaPcts" + formatted_date + ".gdb", "9.2")
+arcpy.env.workspace = "C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidAddrPntsVistaPcts" + formatted_date + ".gdb"
+local_workspace = "C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidAddrPntsVistaPcts" + formatted_date + ".gdb"
 
 # import the sgid address points for the desired counties (using where clause)
 # to run multiple counties use a where clause like this: 'CountyID = 49057, 49035, 49043' 
-county_where_clause = 'CountyID = 49057'
+county_where_clause = 'CountyID = 49041'
 print "Import the Address Points into fgdb with the where clause: " + county_where_clause
 arcpy.FeatureClassToFeatureClass_conversion(sgid_addrspnts, local_workspace, "sgid_addrpnts", county_where_clause)
 
@@ -80,7 +80,7 @@ print "export table to text file"
 # this method seems to give all OIDs a -1 value: arcpy.TableToTable_conversion(local_workspace + "/table_for_export", r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts", "SGIDAddrPntsVistaPcts" + formatted_date + ".csv")
 
 input_fct = local_workspace + "/table_for_export"
-output_csv = r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SGIDAddrPntsVistaPcts" + formatted_date + ".csv"
+output_csv = "C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts" + formatted_date + ".csv"
 csv_delimiter = ","
 
 fld_list = arcpy.ListFields(input_fct)
@@ -102,7 +102,5 @@ with open(output_csv, 'wb') as csv_file:
   #   writer.writerow(row)
   #   row = cursor.next()
   # csv_file.close()  
-
-
 
 print "Done!"
