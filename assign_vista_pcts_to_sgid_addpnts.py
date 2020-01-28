@@ -7,16 +7,16 @@ import csv
 My Notes: 
    1. Manually, create a new directory to store the output files.  I've been creating it here 'C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts'
    2. Update the local vista directory location variable ('local_vista_directory') to point at the directory created in step 1.
-   3. Determine what counties need to be run and indicate those county numbers in the 'county_list' variable in the 'Main' function below. 
-   4. Copy the output files here: G:\My Drive\VISTA\shared_files (Google Drive)
+   3. Determine what counties need to be run and indicate those county numbers in the 'county_list' variable in the '-__main__' function below. 
+   4. Copy the output files here: GoogleDrive\My Drive\VISTA\shared_files (Google Drive)
 '''
 
 #: Set global variables.
-local_vista_directory = 'C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019'  # use this varible below, in place of hard-coded strings (change in four places)
+local_vista_directory = 'C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/2020_Jan28/'  # use this varible below, in place of hard-coded strings (change in four places)
 # local_vista_directory_on_old_tower = 'D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019'
-sgid_addrspnts = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.gov.sde/SGID10.LOCATION.AddressPoints'
-sgid_vista_boundaries = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.gov.sde/SGID10.POLITICAL.VistaBallotAreas'
-sgid_census_place_names = 'Database Connections/DC_agrc@SGID10@sgid.agrc.utah.gov.sde/SGID10.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
+sgid_addrspnts = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.LOCATION.AddressPoints'
+sgid_vista_boundaries = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.POLITICAL.VistaBallotAreas'
+sgid_census_place_names = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
 
 #: Create date variables.
 now = datetime.datetime.now()
@@ -38,9 +38,9 @@ def do_work_and_save_as_csv(county_id):
 
     # create a new file geodatabase with today's date
     print "Create the file geodatabase for " + county_name
-    arcpy.CreateFileGDB_management("D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019", county_name + "_" + formatted_date + ".gdb", "9.2")  ### use this var: local_vista_directory
-    arcpy.env.workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019/" + county_name + "_" + formatted_date + ".gdb"  ### use this var: local_vista_directory
-    local_workspace = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019/" + county_name + "_" + formatted_date + ".gdb"  ### use this var: local_vista_directory
+    arcpy.CreateFileGDB_management(local_vista_directory, county_name + "_" + formatted_date + ".gdb", "9.2")
+    arcpy.env.workspace = local_vista_directory + county_name + "_" + formatted_date + ".gdb"
+    local_workspace = local_vista_directory + county_name + "_" + formatted_date + ".gdb"
 
     # import the sgid address points for the desired counties (using where clause)
     # to run multiple counties use a where clause like this: 'CountyID = 49057, 49035, 49043' 
@@ -96,7 +96,7 @@ def do_work_and_save_as_csv(county_id):
     # this method seems to give all OIDs a -1 value: arcpy.TableToTable_conversion(local_workspace + "/table_for_export", r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts", "SGIDAddrPntsVistaPcts" + formatted_date + ".csv")
 
     input_fct = local_workspace + "/table_for_export"
-    output_csv = "D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019/" + county_name + "_" + formatted_date + ".csv"  ### use this var: local_vista_directory
+    output_csv = local_vista_directory + county_name + "_" + formatted_date + ".csv"
     csv_delimiter = ","
 
     fld_list = arcpy.ListFields(input_fct)
@@ -186,10 +186,14 @@ def get_countyname(county_number):
 if __name__ == "__main__":
     try:
         #: Get a list of county numbers to run this project with. 
-        #: (The following three lines contain all the State's county numbers.  I ran them in three batches but they ran fast enough that they can be run together.)
+        
+        #: all counties, in one list.
+        county_list = [49001,49003,49005,49007,49009,49011,49013,49015,49017,49019,49021,49023,49025,49027,49029,49031,49033,49035,49037,49039,49041,49043,49045,49047,49049,49051,49053,49055,49057]
+                
+        #: The following three lines contain all the counties, broken into three batches.  I ran them in three batches but they ran fast enough that they can be run together.)
         #county_list = [49039,49021,49025,49057,49037,49017,49033,49043,49045]
         #county_list = [49001,49003,49005,49047,49019,49053,49027,49051,49023]
-        county_list = [49049,49013,49009,49031,49011,49029,49055,49015,49041,49007,49035]
+        #county_list = [49049,49013,49009,49031,49011,49029,49055,49015,49041,49007,49035]
 
         #: Loop through desired counties and create output text files.
         for county in county_list:
