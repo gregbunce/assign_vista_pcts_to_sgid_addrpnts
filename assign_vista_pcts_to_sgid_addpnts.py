@@ -12,7 +12,7 @@ My Notes:
 '''
 
 #: Set global variables.
-local_vista_directory = 'C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/2020_Jan28/'  # use this varible below, in place of hard-coded strings (change in four places)
+local_vista_directory = 'C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/2021_06_16/'  # use this varible below, in place of hard-coded strings (change in four places)
 # local_vista_directory_on_old_tower = 'D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019'
 sgid_addrspnts = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.LOCATION.AddressPoints'
 sgid_vista_boundaries = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.POLITICAL.VistaBallotAreas'
@@ -189,11 +189,12 @@ if __name__ == "__main__":
         
         #: all counties, in one list.
         county_list = [49001,49003,49005,49007,49009,49011,49013,49015,49017,49019,49021,49023,49025,49027,49029,49031,49033,49035,49037,49039,49041,49043,49045,49047,49049,49051,49053,49055,49057]
-                
+
         #: The following three lines contain all the counties, broken into three batches.  I ran them in three batches but they ran fast enough that they can be run together.)
         #county_list = [49039,49021,49025,49057,49037,49017,49033,49043,49045]
         #county_list = [49001,49003,49005,49047,49019,49053,49027,49051,49023]
         #county_list = [49049,49013,49009,49031,49011,49029,49055,49015,49041,49007,49035]
+        #county_list = [49045]
 
         #: Loop through desired counties and create output text files.
         for county in county_list:
