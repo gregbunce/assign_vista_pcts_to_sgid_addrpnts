@@ -119,19 +119,19 @@ def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates)
                 for row in update_cur:
                     if row[5] == dup_oid_1:
                         if dup_pct_1 != dup_pct_2 and str(dup_location_1) != str(dup_location_2):
-                            row[0] = "Possible AddrPnt Issue"
+                            row[0] = "Possible AddrPnt Issue Diff VP"
                         elif dup_pct_1 != dup_pct_2 and str(dup_location_1) == str(dup_location_2):
                             row[0] = "Possible VP Issue"
                         else:
-                            row[0] = "Needs further inspection"
+                            row[0] = "Possible AddrPnt Issue Same VP"
                         update_cur.updateRow(row)
                     elif row[5] == dup_oid_2:
                         if dup_pct_1 != dup_pct_2 and str(dup_location_1) != str(dup_location_2):
-                            row[0] = "Possible AddrPnt Issue"
+                            row[0] = "Possible AddrPnt Issue Diff VP"
                         elif dup_pct_1 != dup_pct_2 and str(dup_location_1) == str(dup_location_2):
                             row[0] = "Possible VP Issue"
                         else:
-                            row[0] = "Needs further inspection"
+                            row[0] = "Possible AddrPnt Issue Same VP"
                         update_cur.updateRow(row)
                     else:
                         row[0] = "somthing went wrong"
