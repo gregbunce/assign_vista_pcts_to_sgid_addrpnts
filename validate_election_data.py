@@ -112,7 +112,7 @@ def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates)
                         dup_oid_2 = row[5]
                         dup_pct_2 = row[2]
                         dup_location_2 = str(round(row[3])) + "-" + str(round(row[4]))
-                        
+
             #     #: needs work here... it there are no rows left to work with.. need another update cur.  maybe above is search and this is update.
             with arcpy.da.UpdateCursor(feature_class, ["FLAGGED", "DUP_SEQID", "VistaID", "POINT_X", "POINT_Y", "OBJECTID", "SHAPE@"], where_clause="DUP_SEQID = " + str(seqid_val)) as update_cur:
                 #: Evaluate if address point issue or vp issue.
@@ -120,7 +120,7 @@ def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates)
                     if row[5] == dup_oid_1:
                         if dup_pct_1 != dup_pct_2 and str(dup_location_1) != str(dup_location_2):
                             row[0] = "Possible AddrPnt Issue"
-                        elif dup_pct_1 == dup_pct_2 and str(dup_location_1) == str(dup_location_2):
+                        elif dup_pct_1 != dup_pct_2 and str(dup_location_1) == str(dup_location_2):
                             row[0] = "Possible VP Issue"
                         else:
                             row[0] = "Needs further inspection"
@@ -128,7 +128,7 @@ def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates)
                     elif row[5] == dup_oid_2:
                         if dup_pct_1 != dup_pct_2 and str(dup_location_1) != str(dup_location_2):
                             row[0] = "Possible AddrPnt Issue"
-                        elif dup_pct_1 == dup_pct_2 and str(dup_location_1) == str(dup_location_2):
+                        elif dup_pct_1 != dup_pct_2 and str(dup_location_1) == str(dup_location_2):
                             row[0] = "Possible VP Issue"
                         else:
                             row[0] = "Needs further inspection"
