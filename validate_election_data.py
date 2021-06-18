@@ -27,7 +27,7 @@ def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
         elif field.name == "DUP_SEQID":
             dup_seqid_exists = True
     if flagged_exists == False:
-        arcpy.AddField_management(in_directory + in_dataset_name, "FLAGGED", "TEXT", field_length=80, field_is_nullable="NULLABLE")
+        arcpy.AddField_management(in_directory + in_dataset_name, "FLAGGED", "TEXT", field_length=255, field_is_nullable="NULLABLE")
     if dup_seqid_exists == False:
         arcpy.AddField_management(in_directory + in_dataset_name, "DUP_SEQID", "LONG", field_precision=6, field_is_nullable="NULLABLE")
 
@@ -37,20 +37,24 @@ def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
     duplicates = arcpy.FindIdentical_management(in_directory + in_dataset_name, out_table, fields, output_record_option="ONLY_DUPLICATES")
 
     #: Identify addresses that are duplicates by assigning the sequence id to the DUP_SEQID field.
-    print("begin assigning sequence ids...")
+    print("  begin assigning sequence ids...")
     transfer_seqIDs_to_featureclass(in_directory + in_dataset_name, duplicates)
 
     #: Loop through the dataset and check if any rows do not contain a voting precinct.
-    print("begin check for missing voting precinct...")
+    print("  begin check for missing voting precinct...")
     check_for_missing_vp(in_directory + in_dataset_name)
 
     #: Loop through the duplicate addresses and see if it's an address point issue or voting precinct issue (if they have differnet x,y values then addrpnt, if same x,y then vp issue - ie: an overlap)
-    print("begin checking duplicates to see if address point issue or voting precinct issue...")
+    print("  begin checking duplicates to see if address point issue or voting precinct issue...")
     check_duplicate_addresses_for_issue(in_directory + in_dataset_name, in_directory, duplicates)
 
     #: Check if there is a descrepency as to what county the address belongs to (ie: address point countyid does not match voting precinct countyid)
-    print("begin check for countyid discrepancies...")
+    print("  begin check for countyid discrepancies...")
     check_county_ids_for_discrepancies(in_directory + in_dataset_name)
+
+    #: Clean up and delete the tables no longer needed.
+    arcpy.Delete_management(in_directory + "\\duplicate_addresspnts")
+    arcpy.Delete_management(in_directory + "\\summary_stats")
 
 
 
@@ -92,7 +96,7 @@ def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates)
             number_of_dup_addresses = 0
             for row in search_cur:
                 number_of_dup_addresses = number_of_dup_addresses + 1
-        print(str(number_of_dup_addresses) + " duplicates for sequence id: " + str(seqid_val))
+        #print(str(number_of_dup_addresses) + " duplicates for sequence id: " + str(seqid_val))
 
         #: if there are 2 duplicates address compare the locations and voting precincts, else flag as having x amount of duplicates.
         if number_of_dup_addresses == 2:
@@ -170,6 +174,32 @@ def check_county_ids_for_discrepancies(feature_class):
                 update_cur.updateRow(row)
 
 
+#: This function exports all the rows from the flagging process from each county fgdb and exports the flagged items into a new fgdb.
+def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name):
+    #: Create a new fgdb to hold the flagged rows/addresses.
+    new_fgdb = arcpy.CreateFileGDB_management(data_path, "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb")
+
+    # loop though featureclasses from list copy first one and then append others where flagged is not null.
+    x = 0
+    for county in county_names:
+        print("Begin exporting flagged rows for " + str(county) + "...")
+        #: Create a sting path to where the current county feature class is located.
+        in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
+        
+        x = x + 1
+        #: Check if we're working with the first county.
+        if x == 1:
+            # If it's the first county then import the rows (this saves on building a feature class template).
+            arcpy.FeatureClassToFeatureClass_conversion(in_features, new_fgdb, "Election_Validation_Flagged", "FLAGGED IS NOT NULL")
+        else:
+            #: Append flagged rows from additional county feature classes.
+            features_to_append = arcpy.MakeFeatureLayer_management(in_features,"flagged_lyr", "FLAGGED IS NOT NULL")
+            arcpy.Append_management(features_to_append, data_path + "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb\\Election_Validation_Flagged", "NO_TEST")
+
+            #: Clean up.
+            arcpy.management.Delete(features_to_append)
+
+
 #: This is the Main function.
 if __name__ == "__main__":
     try:
@@ -179,20 +209,21 @@ if __name__ == "__main__":
         dataset_name = "\\sgid_addrpnts_vista_placenames"
 
         #: Get a list of county names to run this project with.
-        county_names = ['BEAVER', 'GARFIELD', 'RICH', 'WAYNE']
+        #county_names = ['SAN_JUAN']
+        county_names = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
 
-        print("Begin validating sgid address points against sgid voting precincts for the following counties: " + str(county_names))
+        print("Validating sgid address points against sgid voting precincts for the following counties: " + str(county_names))
 
         #: Loop through desired counties and create output text files.
         for county in county_names:
             #: Create path to data.
             fgdb_data_path = data_path + county + date_in_fgdb_file_name + ".gdb"
+            print("Begin validating for " + str(county) + "...")
             validate_sgid_addresses_and_voting_precincts(fgdb_data_path, dataset_name)
-        print("Finished validating addresses against voting precincts.")
+        #print("Finished validating addresses against voting precincts.")
 
         #: Export the flagged rows (the onces with possible issues) into a single file geodatabase.
-
-
+        export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name)
 
         print("Script finshed!")
 
