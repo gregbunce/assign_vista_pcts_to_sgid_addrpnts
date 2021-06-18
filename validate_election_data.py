@@ -182,7 +182,7 @@ def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names,
     # loop though featureclasses from list copy first one and then append others where flagged is not null.
     x = 0
     for county in county_names:
-        print("Begin exporting flagged rows for " + str(county) + "...")
+        print("Begin exporting flagged rows for " + str(county))
         #: Create a sting path to where the current county feature class is located.
         in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
         
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         for county in county_names:
             #: Create path to data.
             fgdb_data_path = data_path + county + date_in_fgdb_file_name + ".gdb"
-            print("Begin validating for " + str(county) + "...")
+            print("Begin validating for " + str(county) + ":")
             validate_sgid_addresses_and_voting_precincts(fgdb_data_path, dataset_name)
         #print("Finished validating addresses against voting precincts.")
 
