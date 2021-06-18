@@ -1,16 +1,17 @@
 import arcpy
 from helper_functions.get_countyname_from_num import get_countyname
+from helper_functions.compare_countyid_with_fipscode import county_has_discrepency
 
-#: This script is dependent on the output from 'assign_vista_pcts_to_sgid_addpnts.py' in this repo
-#: Before running this script, make sure to set these variable 
+#: This script is dependent on the output fgdb that is created from the 'assign_vista_pcts_to_sgid_addpnts.py' script (in this repo).
+#: Before running this script, make sure to set these variables in the __main__ function.
     # data_path
     # date_in_fgdb_file_name
     # county_names
-    # dataset_name (this one should be fine, it's basically static)
-    # out_table (this one should be fine, it's basically static)
+    # dataset_name (this one is probably fine, it should be static)
+    # out_table (this one is probably fine, it should be static)
 
 
-#: Worker function.
+#: This function coordinates all the tasks and proceses in this script and is called from the __main__ function below.
 def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
 
     #: add xy data to the in_dataset
@@ -26,7 +27,7 @@ def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
         elif field.name == "DUP_SEQID":
             dup_seqid_exists = True
     if flagged_exists == False:
-        arcpy.AddField_management(in_directory + in_dataset_name, "FLAGGED", "TEXT", field_length=30, field_is_nullable="NULLABLE")
+        arcpy.AddField_management(in_directory + in_dataset_name, "FLAGGED", "TEXT", field_length=80, field_is_nullable="NULLABLE")
     if dup_seqid_exists == False:
         arcpy.AddField_management(in_directory + in_dataset_name, "DUP_SEQID", "LONG", field_precision=6, field_is_nullable="NULLABLE")
 
@@ -47,11 +48,13 @@ def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
     print("begin checking duplicates to see if address point issue or voting precinct issue...")
     check_duplicate_addresses_for_issue(in_directory + in_dataset_name, in_directory, duplicates)
 
-    #: Check if there is a descrepency as to what county the address belongs to.
+    #: Check if there is a descrepency as to what county the address belongs to (ie: address point countyid does not match voting precinct countyid)
+    print("begin check for countyid discrepancies...")
+    check_county_ids_for_discrepancies(in_directory + in_dataset_name)
 
 
 
-#: This method adds the Sequence ID values from the find identical output table to the input feature class.
+#: This function adds the Sequence ID values from the find identical output table to the input feature class.
 def transfer_seqIDs_to_featureclass(feature_class, find_identical_output):
 
     #: add sequence id and see if it has no vp, 
@@ -66,7 +69,7 @@ def transfer_seqIDs_to_featureclass(feature_class, find_identical_output):
                     update_cur.updateRow(update_row)
 
 
-#: Check for address point rows with missing voting precinct (ie: there's a gap in VP layer)
+#: This function checks for address-point rows with missing voting precinct (ie: there's a gap in VP layer)
 def check_for_missing_vp(feature_class):
     with arcpy.da.UpdateCursor(feature_class, ["FLAGGED"], where_clause="VistaID is Null or VistaID = ''") as update_cur:
         for row in update_cur:
@@ -74,7 +77,7 @@ def check_for_missing_vp(feature_class):
             update_cur.updateRow(row)
 
 
-#: Check duplicate addresses for issue type.
+#: This function checks the duplicate-addresses and determines if the issue is an address-point based issue or voting-precinct based issue.
 def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates):
     #: Get the highest DUP_SEQID value to looping though later.
     max_dup_seqid_val = get_max_value_of_dup_seqid(duplicates, in_directory)
@@ -119,30 +122,30 @@ def check_duplicate_addresses_for_issue(feature_class, in_directory, duplicates)
                 for row in update_cur:
                     if row[5] == dup_oid_1:
                         if dup_pct_1 != dup_pct_2 and str(dup_location_1) != str(dup_location_2):
-                            row[0] = "Possible AddrPnt Issue Diff VP"
+                            row[0] = "Duplicate AddrPnts in different VPs"
                         elif dup_pct_1 != dup_pct_2 and str(dup_location_1) == str(dup_location_2):
-                            row[0] = "Possible VP Issue"
+                            row[0] = "Possible VP overlap Issue"
                         else:
-                            row[0] = "Possible AddrPnt Issue Same VP"
+                            row[0] = "Duplicate AddrPnts in same VP"
                         update_cur.updateRow(row)
                     elif row[5] == dup_oid_2:
                         if dup_pct_1 != dup_pct_2 and str(dup_location_1) != str(dup_location_2):
-                            row[0] = "Possible AddrPnt Issue Diff VP"
+                            row[0] = "Duplicate AddrPnts in different VPs"
                         elif dup_pct_1 != dup_pct_2 and str(dup_location_1) == str(dup_location_2):
-                            row[0] = "Possible VP Issue"
+                            row[0] = "Possible VP overlap Issue"
                         else:
-                            row[0] = "Possible AddrPnt Issue Same VP"
+                            row[0] = "Duplicate AddrPnts in same VP"
                         update_cur.updateRow(row)
                     else:
-                        row[0] = "somthing went wrong"
-        else:
+                        row[0] = "_something went wrong_"
+        else: #: The code goes here if there are more than 2 duplicate addresses found. In this case, the user will need to further investigate the numerous issues caused by this scenario.
             with arcpy.da.UpdateCursor(feature_class, ["FLAGGED", "DUP_SEQID"], where_clause="DUP_SEQID = " + str(seqid_val)) as update_cur:
                 for row in update_cur:
-                    row[0] = str(number_of_dup_addresses) + " duplicates found"
+                    row[0] = "One of " + str(number_of_dup_addresses) + " duplicates found"
                     update_cur.updateRow(row)
 
 
-#: Get max seqid value.
+#: This function gets max seqid value from the field statistic table.
 def get_max_value_of_dup_seqid(duplicates, in_directory):
     out_table = in_directory + "\\summary_stats"
     arcpy.Statistics_analysis(duplicates, out_table, [["FEAT_SEQ", "MAX"]])
@@ -154,25 +157,44 @@ def get_max_value_of_dup_seqid(duplicates, in_directory):
     return int(max_val)
 
 
+#: This function checks for county discrepancies (ie: address point county does not match voting precinct county).
+def check_county_ids_for_discrepancies(feature_class):
+    with arcpy.da.UpdateCursor(feature_class, ["CountyID", "CountyID_1", "FLAGGED"]) as update_cur:
+        for row in update_cur:
+            has_discrepancy = county_has_discrepency(row[1], row[0])
+            if has_discrepancy == True:
+                if row[2] is None:
+                    row[2] = "CountyID Discrepancy"
+                else: 
+                    row[2] = str(row[2]) + "; CountyID Discrepancy"
+                update_cur.updateRow(row)
 
-#: Main function.
+
+#: This is the Main function.
 if __name__ == "__main__":
     try:
         #: Set directory path for data files
-        data_path = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2020_10_22\\'
-        date_in_fgdb_file_name = "_2021615"
+        data_path = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_06_16\\'
+        date_in_fgdb_file_name = "_2021616"
         dataset_name = "\\sgid_addrpnts_vista_placenames"
 
         #: Get a list of county names to run this project with.
-        county_names = ['TOOELE']
+        county_names = ['BEAVER', 'GARFIELD', 'RICH', 'WAYNE']
+
+        print("Begin validating sgid address points against sgid voting precincts for the following counties: " + str(county_names))
 
         #: Loop through desired counties and create output text files.
         for county in county_names:
             #: Create path to data.
             fgdb_data_path = data_path + county + date_in_fgdb_file_name + ".gdb"
             validate_sgid_addresses_and_voting_precincts(fgdb_data_path, dataset_name)
+        print("Finished validating addresses against voting precincts.")
 
-        print("Done checking addresses against voting precincts for the following counties: " + str(county_names))
+        #: Export the flagged rows (the onces with possible issues) into a single file geodatabase.
+
+
+
+        print("Script finshed!")
 
     except Exception:
         e = sys.exc_info()[1]
