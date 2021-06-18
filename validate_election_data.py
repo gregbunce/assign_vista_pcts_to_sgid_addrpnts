@@ -26,9 +26,17 @@ def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
             flagged_exists = True
         elif field.name == "DUP_SEQID":
             dup_seqid_exists = True
-    if flagged_exists == False:
+    if flagged_exists == True:
+        #: Delete it before creating it again (clears out any old values)
+        arcpy.DeleteField_management(in_directory + in_dataset_name, "FLAGGED")
         arcpy.AddField_management(in_directory + in_dataset_name, "FLAGGED", "TEXT", field_length=255, field_is_nullable="NULLABLE")
-    if dup_seqid_exists == False:
+    else:
+        arcpy.AddField_management(in_directory + in_dataset_name, "FLAGGED", "TEXT", field_length=255, field_is_nullable="NULLABLE")
+    if dup_seqid_exists == True:
+        #: Delete it before creating it again (clears out any old values)
+        arcpy.DeleteField_management(in_directory + in_dataset_name, "DUP_SEQID")
+        arcpy.AddField_management(in_directory + in_dataset_name, "DUP_SEQID", "LONG", field_precision=6, field_is_nullable="NULLABLE")
+    else:
         arcpy.AddField_management(in_directory + in_dataset_name, "DUP_SEQID", "LONG", field_precision=6, field_is_nullable="NULLABLE")
 
     #: find identical for address-based attributes only
@@ -169,35 +177,44 @@ def check_county_ids_for_discrepancies(feature_class):
             if has_discrepancy == True:
                 if row[2] is None:
                     row[2] = "CountyID Discrepancy"
-                else: 
+                else:
                     row[2] = str(row[2]) + "; CountyID Discrepancy"
                 update_cur.updateRow(row)
 
 
 #: This function exports all the rows from the flagging process from each county fgdb and exports the flagged items into a new fgdb.
-def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name):
+def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name, statewide_or_individual_county_layers):
     #: Create a new fgdb to hold the flagged rows/addresses.
     new_fgdb = arcpy.CreateFileGDB_management(data_path, "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb")
+    
+    #: Check if we're creating one statewide feature class to hold all the flagged rows or a feature class for each county.
+    if statewide_or_individual_county_layers == "statewide_layer":
+        # loop though featureclasses from list copy first one and then append others where flagged is not null.
+        x = 0
+        for county in county_names:
+            print("Begin exporting flagged rows for " + str(county))
+            #: Create a sting path to where the current county feature class is located.
+            in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
+            
+            x = x + 1
+            #: Check if we're working with the first county.
+            if x == 1:
+                # If it's the first county then import the rows (this saves on building a feature class template).
+                arcpy.FeatureClassToFeatureClass_conversion(in_features, new_fgdb, "Election_Validation_Flagged", "FLAGGED IS NOT NULL")
+            else:
+                #: Append flagged rows from additional county feature classes.
+                features_to_append = arcpy.MakeFeatureLayer_management(in_features,"flagged_lyr", "FLAGGED IS NOT NULL")
+                arcpy.Append_management(features_to_append, data_path + "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb\\Election_Validation_Flagged", "NO_TEST")
+                #: Clean up.
+                arcpy.management.Delete(features_to_append)
+    elif statewide_or_individual_county_layers == "individual_county_layers":
+        for county in county_names:
+            print("Begin exporting flagged rows for " + str(county))
+            #: Create a sting path to where the current county feature class is located.
+            in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
+            #: Export to a new county feature class
+            arcpy.FeatureClassToFeatureClass_conversion(in_features, new_fgdb, "Election_Validation_Flagged_" + str(county), "FLAGGED IS NOT NULL")
 
-    # loop though featureclasses from list copy first one and then append others where flagged is not null.
-    x = 0
-    for county in county_names:
-        print("Begin exporting flagged rows for " + str(county))
-        #: Create a sting path to where the current county feature class is located.
-        in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
-        
-        x = x + 1
-        #: Check if we're working with the first county.
-        if x == 1:
-            # If it's the first county then import the rows (this saves on building a feature class template).
-            arcpy.FeatureClassToFeatureClass_conversion(in_features, new_fgdb, "Election_Validation_Flagged", "FLAGGED IS NOT NULL")
-        else:
-            #: Append flagged rows from additional county feature classes.
-            features_to_append = arcpy.MakeFeatureLayer_management(in_features,"flagged_lyr", "FLAGGED IS NOT NULL")
-            arcpy.Append_management(features_to_append, data_path + "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb\\Election_Validation_Flagged", "NO_TEST")
-
-            #: Clean up.
-            arcpy.management.Delete(features_to_append)
 
 
 #: This is the Main function.
@@ -209,7 +226,7 @@ if __name__ == "__main__":
         dataset_name = "\\sgid_addrpnts_vista_placenames"
 
         #: Get a list of county names to run this project with.
-        #county_names = ['SAN_JUAN']
+        #county_names = ['GARFIELD']
         county_names = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
 
         print("Validating sgid address points against sgid voting precincts for the following counties: " + str(county_names))
@@ -223,7 +240,7 @@ if __name__ == "__main__":
         #print("Finished validating addresses against voting precincts.")
 
         #: Export the flagged rows (the onces with possible issues) into a single file geodatabase.
-        export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name)
+        export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name, "statewide_layer") # last param is either "individual_county_layers" or "statewide_layer"
 
         print("Script finshed!")
 
