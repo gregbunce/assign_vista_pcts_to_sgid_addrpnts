@@ -9,7 +9,7 @@ from helper_functions.compare_countyid_with_fipscode import county_has_discrepen
     # county_names
     # dataset_name (this one is probably fine, it should be static)
     # out_table (this one is probably fine, it should be static)
-
+    # run using arcgispro-py3
 
 #: This function coordinates all the tasks and proceses in this script and is called from the __main__ function below.
 def validate_sgid_addresses_and_voting_precincts(in_directory, in_dataset_name):
@@ -221,13 +221,13 @@ def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names,
 if __name__ == "__main__":
     try:
         #: Set directory path for data files
-        data_path = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_06_16\\'
-        date_in_fgdb_file_name = "_2021616"
+        data_path = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_07_19\\'
+        date_in_fgdb_file_name = "_2021719"
         dataset_name = "\\sgid_addrpnts_vista_placenames"
 
         #: Get a list of county names to run this project with.
-        #county_names = ['GARFIELD']
-        county_names = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
+        county_names = ['SALT_LAKE']
+        #county_names = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
 
         print("Validating sgid address points against sgid voting precincts for the following counties: " + str(county_names))
 

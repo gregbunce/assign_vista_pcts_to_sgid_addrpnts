@@ -9,14 +9,15 @@ My Notes:
    2. Update the local vista directory location variable ('local_vista_directory') to point at the directory created in step 1.
    3. Determine what counties need to be run and indicate those county numbers in the 'county_list' variable in the '-__main__' function below. 
    4. Copy the output files here: GoogleDrive\My Drive\VISTA\shared_files (Google Drive)
+   5. run using arcgispro-py3
 '''
 
 #: Set global variables.
-local_vista_directory = 'C:/Users/gbunce/Documents/projects/vista/agrc_addrpnts_with_vista_ballot_precincts/2021_06_16/'  # use this varible below, in place of hard-coded strings (change in four places)
-# local_vista_directory_on_old_tower = 'D:/vista/agrc_addrpnts_with_vista_ballot_precincts/Sept23rd2019'
-sgid_addrspnts = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.LOCATION.AddressPoints'
-sgid_vista_boundaries = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.POLITICAL.VistaBallotAreas'
-sgid_census_place_names = 'Database Connections\internal@SGID@internal.agrc.utah.gov.sde/SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
+local_vista_directory = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_07_26\\'  # use this varible below, in place of hard-coded strings (change in four places)
+sgid_addrspnts = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.LOCATION.AddressPoints'
+sgid_vista_boundaries = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.POLITICAL.VistaBallotAreas'
+sgid_census_place_names = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
+
 
 #: Create date variables.
 now = datetime.datetime.now()
@@ -37,7 +38,7 @@ def do_work_and_save_as_csv(county_id):
     county_name.strip()
 
     # create a new file geodatabase with today's date
-    print "Create the file geodatabase for " + county_name
+    print("Create the file geodatabase for " + county_name)
     arcpy.CreateFileGDB_management(local_vista_directory, county_name + "_" + formatted_date + ".gdb", "9.2")
     arcpy.env.workspace = local_vista_directory + county_name + "_" + formatted_date + ".gdb"
     local_workspace = local_vista_directory + county_name + "_" + formatted_date + ".gdb"
@@ -45,15 +46,15 @@ def do_work_and_save_as_csv(county_id):
     # import the sgid address points for the desired counties (using where clause)
     # to run multiple counties use a where clause like this: 'CountyID = 49057, 49035, 49043' 
     county_where_clause = 'CountyID = ' + str(county_id)
-    print "Import the Address Points into fgdb with the where clause: " + county_where_clause
+    print("Import the Address Points into fgdb with the where clause: " + county_where_clause)
     arcpy.FeatureClassToFeatureClass_conversion(sgid_addrspnts, local_workspace, "sgid_addrpnts", county_where_clause)
 
     # add the vista precincts to the address points
-    print "Run Identity with vista boundaries"
+    print("Run Identity with vista boundaries")
     arcpy.Identity_analysis("sgid_addrpnts", sgid_vista_boundaries, "sgid_addrpnts_vista")
 
     # add the place name to the address points
-    print "Run Identity with census place names" 
+    print("Run Identity with census place names")
     arcpy.Identity_analysis("sgid_addrpnts_vista", sgid_census_place_names, "sgid_addrpnts_vista_placenames")
 
     # # add field to create the address name field (Street Name + Street Suffix)
@@ -65,24 +66,24 @@ def do_work_and_save_as_csv(county_id):
     # arcpy.CalculateField_management(in_table="sgid_addrpnts_vista_placenames", field="StreetNameStreetSuffx", expression="combineValues( !StreetName!, !SuffixDir!)", expression_type="PYTHON_9.3", code_block="""def combineValues(streetname, streetsuffix):\n   fullname = streetname\n   if len(streetsuffix) > 0:\n      fullname = fullname + " " + streetsuffix\n   return fullname\n""")
 
     # add the value "Unincorporated" when there is no City value
-    print "Begin adding the value Unincorporated when there is no City value"
+    print("Begin adding the value Unincorporated when there is no City value")
     arcpy.CalculateField_management(in_table="sgid_addrpnts_vista_placenames", field="City", expression="addUnincorporated( !City! )", expression_type="PYTHON_9.3", code_block="""def addUnincorporated(city):\n   if city == "":\n      city = "Unincorporated"\n   return city\n""")
 
     # export to table and rename and remove fields
-    print "Export the feature class to table"
+    print("Export the feature class to table")
     # arcpy.TableToTable_conversion(in_rows="sgid_addrpnts_vista_placenames", out_path="D:/vista/agrc_addrpnts_with_vista_ballot_precincts/SgidPntsVistaPcts_2019719.gdb", out_name="table_for_export", where_clause="", field_mapping="""HouseNumber "Address Number" true true false 10 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,AddNum,-1,-1;PrefixDir "Prefix Direction" true true false 1 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PrefixDir,-1,-1;StreetType "Street Type" true true false 4 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,StreetType,-1,-1;UnitType "Unit Type" true true false 20 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,UnitType,-1,-1;UnitID "Unit ID" true true false 20 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,UnitID,-1,-1;City "City" true true false 30 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,City,-1,-1;Zip "Zip Code" true true false 5 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,ZipCode,-1,-1;AddressType "Point Type" true true false 15 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PtType,-1,-1;CountyID "CountyID" true true false 2 Short 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,CountyID_1,-1,-1;Precinct "Precinct" true true false 6 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PrecinctID,-1,-1;SubPrecinct "SubPrecinct" true true false 4 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,SubPrecinctID,-1,-1;Placename "pop_place" true true false 50 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,PLACENAME,-1,-1;StreetName "StreetName" true true false 50 Text 0 0 ,First,#,D:\vista\agrc_addrpnts_with_vista_ballot_precincts\SgidPntsVistaPcts_2019719.gdb\sgid_addrpnts_vista_placenames,StreetNameStreetSuffx,-1,-1""", config_keyword="")
     arcpy.TableToTable_conversion("sgid_addrpnts_vista_placenames", local_workspace, "table_for_export")
 
     # remove a few fields in the table
-    print "Remove a few fields in the table"
+    print("Remove a few fields in the table")
     arcpy.DeleteField_management("table_for_export", ["FID_sgid_addrpnts_vista", "FID_sgid_addrpnts", "AddSystem", "UTAddPtID", "FullAdd", "AddNumSuffix", "LandmarkName", "Building", "CountyID", "State", "PtLocation", "Structure", "ParcelID", "AddSource", "LoadDate", "USNG", "FID_VistaBallotAreas", "VistaID", "VersionNbr", "EffectiveDate", "AliasName", "Comments", "RcvdDate", "FID_UnIncorpAreas2010_Approx", "CountyNbr"])
 
     # upgrade geodatabase to 10.0 or greater (to allow for the alter field tool to run)
-    print "Upgrading geodatbase so we can run .AlterField tool - which requires newer fgdb"
+    print("Upgrading geodatbase so we can run .AlterField tool - which requires newer fgdb")
     arcpy.UpgradeGDB_management(local_workspace, input_prerequisite_check="PREREQUISITE_CHECK", input_upgradegdb_check="UPGRADE")
 
     # rename a few field names in the table
-    print "Rename a few field names in the table"
+    print("Rename a few field names in the table")
     arcpy.AlterField_management("table_for_export", 'AddNum', 'HouseNumber')
     # arcpy.AlterField_management("table_for_export", 'StreetNameStreetSuffx', 'StreetName', 'StreetName')
     arcpy.AlterField_management("table_for_export", 'ZipCode', 'Zip', 'Zip')
@@ -92,19 +93,18 @@ def do_work_and_save_as_csv(county_id):
     arcpy.AlterField_management("table_for_export", 'PLACENAME', 'CensusPlace', 'CensusPlace')
 
     # export the table to a text file
-    print "export table to text file"
+    print("export table to text file")
     # this method seems to give all OIDs a -1 value: arcpy.TableToTable_conversion(local_workspace + "/table_for_export", r"D:\vista\agrc_addrpnts_with_vista_ballot_precincts", "SGIDAddrPntsVistaPcts" + formatted_date + ".csv")
 
     input_fct = local_workspace + "/table_for_export"
     output_csv = local_vista_directory + county_name + "_" + formatted_date + ".csv"
-    csv_delimiter = ","
 
     fld_list = arcpy.ListFields(input_fct)
     fld_names = [fld.name for fld in fld_list]
 
     # Open the CSV file and write out field names and data
-    with open(output_csv, 'wb') as csv_file:
-        writer = csv.writer(csv_file, delimiter=csv_delimiter)
+    with open(output_csv, 'w', newline='') as csv_file:
+        writer = csv.writer(csv_file, delimiter=',')
         writer.writerow(fld_names)
         
         with arcpy.da.SearchCursor(input_fct, fld_names) as cursor:
@@ -188,13 +188,13 @@ if __name__ == "__main__":
         #: Get a list of county numbers to run this project with. 
         
         #: all counties, in one list.
-        county_list = [49001,49003,49005,49007,49009,49011,49013,49015,49017,49019,49021,49023,49025,49027,49029,49031,49033,49035,49037,49039,49041,49043,49045,49047,49049,49051,49053,49055,49057]
+        #county_list = [49001,49003,49005,49007,49009,49011,49013,49015,49017,49019,49021,49023,49025,49027,49029,49031,49033,49035,49037,49039,49041,49043,49045,49047,49049,49051,49053,49055,49057]
 
         #: The following three lines contain all the counties, broken into three batches.  I ran them in three batches but they ran fast enough that they can be run together.)
         #county_list = [49039,49021,49025,49057,49037,49017,49033,49043,49045]
         #county_list = [49001,49003,49005,49047,49019,49053,49027,49051,49023]
         #county_list = [49049,49013,49009,49031,49011,49029,49055,49015,49041,49007,49035]
-        #county_list = [49045]
+        county_list = [49035]
 
         #: Loop through desired counties and create output text files.
         for county in county_list:
@@ -204,8 +204,8 @@ if __name__ == "__main__":
 
     except Exception:
         e = sys.exc_info()[1]
-        print str(e.args[0])
-        print str(arcpy.GetMessages(2))
+        print(str(e.args[0]))
+        print(str(arcpy.GetMessages(2)))
         file.write("\n" + "ERROR MESSAGE from sys.exe_info: " + e.args[0]+ "\n")
         file.write("\n" + "ERROR MESSAGE from arcpy.GetMessages(2): " + arcpy.GetMessages(2))
         file.close()
