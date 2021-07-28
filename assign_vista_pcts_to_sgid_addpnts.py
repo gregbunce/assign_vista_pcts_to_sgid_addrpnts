@@ -2,6 +2,7 @@ import arcpy
 from arcpy import env
 import datetime
 import csv
+from helper_functions.get_county_name_num import get_countyid
 
 '''
 My Notes: 
@@ -13,29 +14,40 @@ My Notes:
 '''
 
 #: Set global variables.
-local_vista_directory = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_07_26\\'  # use this varible below, in place of hard-coded strings (change in four places)
-sgid_addrspnts = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.LOCATION.AddressPoints'
-sgid_vista_boundaries = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.POLITICAL.VistaBallotAreas'
-sgid_census_place_names = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
+# local_vista_directory = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_07_26\\'  # use this varible below, in place of hard-coded strings (change in four places)
+# sgid_addrspnts = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.LOCATION.AddressPoints'
+# sgid_vista_boundaries = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.POLITICAL.VistaBallotAreas'
+# sgid_census_place_names = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
 
 
-#: Create date variables.
-now = datetime.datetime.now()
-year = now.year
-month = now.month
-day = now.day
-hour = now.hour
-min = now.minute
-formatted_date = str(year) + str(month) + str(day)
-#arcpy.env.overwriteOutput = True
+# #: Create date variables.
+# now = datetime.datetime.now()
+# year = now.year
+# month = now.month
+# day = now.day
+# hour = now.hour
+# min = now.minute
+# formatted_date = str(year) + str(month) + str(day)
+# #arcpy.env.overwriteOutput = True
 
 
 #: Worker function.
-def do_work_and_save_as_csv(county_id):
+def do_work_and_save_as_csv(county_name, local_vista_directory, formatted_date):
 
-    #: get the countyname from the county number
-    county_name = get_countyname(county_id)
-    county_name.strip()
+    sgid_addrspnts = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.LOCATION.AddressPoints'
+    sgid_vista_boundaries = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.POLITICAL.VistaBallotAreas'
+    sgid_census_place_names = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
+
+
+    #: Create date variables.
+    now = datetime.datetime.now()
+    year = now.year
+    month = now.month
+    day = now.day
+    hour = now.hour
+    min = now.minute
+    #formatted_date = str(year) + str(month) + str(day)
+    #arcpy.env.overwriteOutput = True
 
     # create a new file geodatabase with today's date
     print("Create the file geodatabase for " + county_name)
@@ -44,7 +56,9 @@ def do_work_and_save_as_csv(county_id):
     local_workspace = local_vista_directory + county_name + "_" + formatted_date + ".gdb"
 
     # import the sgid address points for the desired counties (using where clause)
-    # to run multiple counties use a where clause like this: 'CountyID = 49057, 49035, 49043' 
+    # to run multiple counties use a where clause like this: 'CountyID = 49057, 49035, 49043'
+    #: get the countyid from the county name
+    county_id = get_countyid(county_name)
     county_where_clause = 'CountyID = ' + str(county_id)
     print("Import the Address Points into fgdb with the where clause: " + county_where_clause)
     arcpy.FeatureClassToFeatureClass_conversion(sgid_addrspnts, local_workspace, "sgid_addrpnts", county_where_clause)
@@ -113,88 +127,15 @@ def do_work_and_save_as_csv(county_id):
         csv_file.close()
 
 
-#: Pass in county number and get county name (used for final text file names).
-def get_countyname(county_number):
-    county_name = ''
-
-    if county_number == 49039:
-        county_name = 'SANPETE'
-    if county_number == 49021:
-        county_name = 'IRON'
-    if county_number == 49025:
-        county_name = 'KANE'
-    if county_number == 49057:
-        county_name = 'WEBER'
-    if county_number == 49037:
-        county_name = 'SAN_JUAN'
-    if county_number == 49017:
-        county_name = 'GARFIELD'
-    if county_number == 49033:
-        county_name = 'RICH'
-    if county_number == 49043:
-        county_name = 'SUMMIT'
-    if county_number == 49045:
-        county_name = 'TOOELE'
-    if county_number == 49001:
-        county_name = 'BEAVER'
-    if county_number == 49003:
-        county_name = 'BOX_ELDER'
-    if county_number == 49005:
-        county_name = 'CACHE'
-    if county_number == 49047:
-        county_name = 'UINTAH'
-    if county_number == 49019:
-        county_name = 'GRAND'
-    if county_number == 49053:
-        county_name = 'WASHINGTON'
-    if county_number == 49027:
-        county_name = 'MILLARD'
-    if county_number == 49051:
-        county_name = 'WASATCH'
-    if county_number == 49023:
-        county_name = 'JUAB'
-    if county_number == 49049:
-        county_name = 'UTAH'
-    if county_number == 49013:
-        county_name = 'DUCHESNE'
-    if county_number == 49009:
-        county_name = 'DAGGETT'
-    if county_number == 49031:
-        county_name = 'PIUTE'
-    if county_number == 49011:
-        county_name = 'DAVIS'
-    if county_number == 49029:
-        county_name = 'MORGAN'
-    if county_number == 49055:
-        county_name = 'WAYNE'
-    if county_number == 49015:
-        county_name = 'EMERY'
-    if county_number == 49041:
-        county_name = 'SEVIER'
-    if county_number == 49007:
-        county_name = 'CARBON'
-    if county_number == 49035:
-        county_name = 'SALT_LAKE'
-
-    if county_name == '':
-        return "NotFound"
-    else:
-        return county_name
-
-
 #: Main function.
 if __name__ == "__main__":
     try:
-        #: Get a list of county numbers to run this project with. 
+        #: Get a list of county names to run this project with.
         
         #: all counties, in one list.
-        #county_list = [49001,49003,49005,49007,49009,49011,49013,49015,49017,49019,49021,49023,49025,49027,49029,49031,49033,49035,49037,49039,49041,49043,49045,49047,49049,49051,49053,49055,49057]
+        #county_list = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
+        county_list = ['DAGGETT']
 
-        #: The following three lines contain all the counties, broken into three batches.  I ran them in three batches but they ran fast enough that they can be run together.)
-        #county_list = [49039,49021,49025,49057,49037,49017,49033,49043,49045]
-        #county_list = [49001,49003,49005,49047,49019,49053,49027,49051,49023]
-        #county_list = [49049,49013,49009,49031,49011,49029,49055,49015,49041,49007,49035]
-        county_list = [49035]
 
         #: Loop through desired counties and create output text files.
         for county in county_list:
@@ -206,7 +147,3 @@ if __name__ == "__main__":
         e = sys.exc_info()[1]
         print(str(e.args[0]))
         print(str(arcpy.GetMessages(2)))
-        file.write("\n" + "ERROR MESSAGE from sys.exe_info: " + e.args[0]+ "\n")
-        file.write("\n" + "ERROR MESSAGE from arcpy.GetMessages(2): " + arcpy.GetMessages(2))
-        file.close()
-        #log_file.write('An exception has occured - %s' % e)

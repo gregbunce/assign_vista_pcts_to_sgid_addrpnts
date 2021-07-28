@@ -1,5 +1,5 @@
 import arcpy
-from helper_functions.get_countyname_from_num import get_countyname
+from helper_functions.get_county_name_num import get_countyname
 from helper_functions.compare_countyid_with_fipscode import county_has_discrepency
 
 #: This script is dependent on the output fgdb that is created from the 'assign_vista_pcts_to_sgid_addpnts.py' script (in this repo).
@@ -185,7 +185,7 @@ def check_county_ids_for_discrepancies(feature_class):
 #: This function exports all the rows from the flagging process from each county fgdb and exports the flagged items into a new fgdb.
 def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names, dataset_name, statewide_or_individual_county_layers):
     #: Create a new fgdb to hold the flagged rows/addresses.
-    new_fgdb = arcpy.CreateFileGDB_management(data_path, "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb")
+    new_fgdb = arcpy.CreateFileGDB_management(data_path, "_DISCREPANCIES" + "_" + date_in_fgdb_file_name + ".gdb")
     
     #: Check if we're creating one statewide feature class to hold all the flagged rows or a feature class for each county.
     if statewide_or_individual_county_layers == "statewide_layer":
@@ -194,7 +194,7 @@ def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names,
         for county in county_names:
             print("Begin exporting flagged rows for " + str(county))
             #: Create a sting path to where the current county feature class is located.
-            in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
+            in_features = data_path + county + "_" + date_in_fgdb_file_name + ".gdb" + dataset_name
             
             x = x + 1
             #: Check if we're working with the first county.
@@ -204,14 +204,14 @@ def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names,
             else:
                 #: Append flagged rows from additional county feature classes.
                 features_to_append = arcpy.MakeFeatureLayer_management(in_features,"flagged_lyr", "FLAGGED IS NOT NULL")
-                arcpy.Append_management(features_to_append, data_path + "_DISCREPANCIES" + date_in_fgdb_file_name + ".gdb\\Election_Validation_Flagged", "NO_TEST")
+                arcpy.Append_management(features_to_append, data_path + "_DISCREPANCIES" + "_" + date_in_fgdb_file_name + ".gdb\\Election_Validation_Flagged", "NO_TEST")
                 #: Clean up.
                 arcpy.management.Delete(features_to_append)
     elif statewide_or_individual_county_layers == "individual_county_layers":
         for county in county_names:
             print("Begin exporting flagged rows for " + str(county))
             #: Create a sting path to where the current county feature class is located.
-            in_features = data_path + county + date_in_fgdb_file_name + ".gdb" + dataset_name
+            in_features = data_path + county + "_" + date_in_fgdb_file_name + ".gdb" + dataset_name
             #: Export to a new county feature class
             arcpy.FeatureClassToFeatureClass_conversion(in_features, new_fgdb, "Election_Validation_Flagged_" + str(county), "FLAGGED IS NOT NULL")
 
@@ -221,8 +221,8 @@ def export_flagged_rows_to_fgdb(data_path, date_in_fgdb_file_name, county_names,
 if __name__ == "__main__":
     try:
         #: Set directory path for data files
-        data_path = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_07_19\\'
-        date_in_fgdb_file_name = "_2021719"
+        data_path = 'C:\\Users\\gbunce\\Documents\\projects\\vista\\agrc_addrpnts_with_vista_ballot_precincts\\2021_07_26\\'
+        date_in_fgdb_file_name = "_2021726"
         dataset_name = "\\sgid_addrpnts_vista_placenames"
 
         #: Get a list of county names to run this project with.
