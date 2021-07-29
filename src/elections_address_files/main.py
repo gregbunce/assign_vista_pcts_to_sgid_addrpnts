@@ -2,6 +2,7 @@ import os, datetime, errno
 from commands.assign_vista_pcts_to_sgid_addpnts import *
 from commands.validate_election_data import *
 from commands.zip_files import *
+from commands.upload_files_to_google_drive import *
 
 def main(county_list, run_gis_validation_checks_bool):
     print("Begin...")
@@ -39,6 +40,7 @@ def main(county_list, run_gis_validation_checks_bool):
 
     #: STEP 5
     #: copy the the output data (that's in the newly created floder in step 1) to the agrc_public_share were folks can pick up the data.
+    upload_files(directory, folder_name)
 
     print("Done!")
     print("  Completed counties include: " + str(county_list))
@@ -70,7 +72,7 @@ if __name__ == "__main__":
         #: Get a list of county names to run this project with.
         #: all counties, in one list.
         #county_list = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
-        county_list = ['DAGGETT']
+        county_list = ['DAGGETT', 'RICH']
         #: determine if we're running the additional/optional gis validation checks that output the discrepancies fgdb
         run_gis_validation_checks_bool = True
 
