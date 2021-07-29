@@ -70,7 +70,7 @@ if __name__ == "__main__":
         #: Get a list of county names to run this project with.
         #: all counties, in one list.
         #county_list = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
-        county_list = ['DAGGETT', 'RICH']
+        county_list = ['DAGGETT']
         #: determine if we're running the additional/optional gis validation checks that output the discrepancies fgdb
         run_gis_validation_checks_bool = True
 

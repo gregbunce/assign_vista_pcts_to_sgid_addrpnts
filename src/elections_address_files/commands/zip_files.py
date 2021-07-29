@@ -1,5 +1,6 @@
-import os, zipfile, glob, shutil
+import os, zipfile
 
+# Zip files.
 def zipfiles(directory):
   
     # File extension to zip.
@@ -11,40 +12,18 @@ def zipfiles(directory):
         if file.endswith(ext):
             #: Zip it.
             input_fgdb_name = file.rsplit( ".", 1)[0]
-            output_zipped_fgdb_name = input_fgdb_name + "_gdb.zip"
-            zip_file_geodatabase(directory + "\\" + file, directory + "\\" + output_zipped_fgdb_name)
+            output_zipped_fgdb_name = "/" + input_fgdb_name + "_gdb.zip"
+            full_path_to_fgdb = directory + "/" + file
 
+            print("   Zipping " + str(full_path_to_fgdb))
 
+            outFile = f'{full_path_to_fgdb[0:-4]}_gdb.zip'
+            gdbName = os.path.basename(full_path_to_fgdb)
 
-            # newZipFN = directory + "\\" + file
-            # inFileGeodatabase = directory + "\\" + output_zipped_fgdb_name
-
-            # zipobj = zipfile.ZipFile(newZipFN,'w')
-
-            # for infile in glob.glob(inFileGeodatabase+"/*"):
-            #     zipobj.write(infile, os.path.basename(inFileGeodatabase)+"/"+os.path.basename(infile), zipfile.ZIP_DEFLATED)
-            #     print ("Zipping: " + infile)
-
-            # zipobj.close()
+            with zipfile.ZipFile(outFile,mode='w',compression=zipfile.ZIP_DEFLATED,allowZip64=True) as myzip:
+                for f in os.listdir(full_path_to_fgdb):
+                    if f[-5:] != '.lock':
+                        myzip.write(os.path.join(full_path_to_fgdb,f),gdbName+'\\'+os.path.basename(f))
 
         else:
             continue
-
-
-#### BEGIN >>> Zip File Geodatabase function ####
-def zip_file_geodatabase(inFileGeodatabase, newZipFN):
-   if not (os.path.exists(inFileGeodatabase)):
-      return False
-
-   if (os.path.exists(newZipFN)):
-      os.remove(newZipFN)
-
-   zipobj = zipfile.ZipFile(newZipFN,'w')
-
-   for infile in glob.glob(inFileGeodatabase+"/*"):
-      zipobj.write(infile, os.path.basename(inFileGeodatabase)+"/"+os.path.basename(infile), zipfile.ZIP_DEFLATED)
-      print ("Zipping: " + infile)
-
-   zipobj.close()
-   return True
-#### Zip File Geodatabase function <<< END ####
