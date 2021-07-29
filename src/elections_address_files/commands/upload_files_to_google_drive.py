@@ -22,8 +22,12 @@ def upload_files(directory, folder_name):
     for file in os.listdir(directory):
         print(str(file))
         if file.endswith(ext):
-            print("to me moved; " + str(file))
-            source_file = directory + "\\" + file
-            destination_folder = google_drive_parent_directory + folder_name
-            shutil.copy(source_file, destination_folder)
-            print("Moved " + directory + "\\" + file + " to Google Drive shared directory.")
+            if file.endswith('.zip') and "DISCREPANCIES" in file:
+                source_file = directory + "\\" + file
+                destination_folder = google_drive_parent_directory + folder_name
+                shutil.copy(source_file, destination_folder)
+            elif file.endswith('.csv'):
+                source_file = directory + "\\" + file
+                destination_folder = google_drive_parent_directory + folder_name
+                shutil.copy(source_file, destination_folder)
+
