@@ -1,10 +1,10 @@
-import os, datetime, errno
+import os, datetime, sys, setuptools
 from commands.assign_vista_pcts_to_sgid_addpnts import *
 from commands.validate_election_data import *
 from commands.zip_files import *
 from commands.upload_files_to_google_drive import *
 
-def main(county_list, run_gis_validation_checks_bool):
+def main(county_list, gis_validation):
     print("Begin...")
     print("  Processing the following counties: " + str(county_list))
 
@@ -21,7 +21,8 @@ def main(county_list, run_gis_validation_checks_bool):
     #: STEP 3
     #: (optional) Call validate_election_data.py (this script creates the gis files that show possible discrepancies).
     #: Loop through desired counties and create output text files.
-    if run_gis_validation_checks_bool == True:
+    if gis_validation == "validate_gis":
+        print("Running GIS validation checks...")
         #: Set directory path for data files
         dataset_name = "\\sgid_addrpnts_vista_placenames"
 
@@ -33,6 +34,8 @@ def main(county_list, run_gis_validation_checks_bool):
 
         #: Export the flagged rows (the onces with possible issues) into a single file geodatabase.
         export_flagged_rows_to_fgdb(directory + "\\", folder_name, county_list, dataset_name, "statewide_layer") # last param is either "individual_county_layers" or "statewide_layer"
+    else:
+        print("Skipping GIS validation checks.")
 
     #: STEP 4
     #: zip up each fgdb output(s) that were created step 1.
@@ -59,8 +62,7 @@ def create_output_dir_with_todays_date():
     try:
         os.makedirs(directory)
     except OSError as e:
-        if e.errno != errno.EXIST:
-            raise
+        raise
 
     return directory, folder_name;
 
@@ -68,15 +70,23 @@ def create_output_dir_with_todays_date():
 #: Main function.
 if __name__ == "__main__":
     try:
+        list_of_counties = sys.argv[1].split(',')
+        gis_validation = sys.argv[2]
+        print(str(sys.argv[1]))
+        print((sys.argv[2]))
+
+        #: create list from list_of_counties commandline string.
+
+
         #: setup params:
         #: Get a list of county names to run this project with.
         #: all counties, in one list.
-        #county_list = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
-        county_list = ['SALT_LAKE']
+        #list_of_counties = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
+        ##list_of_counties = ['DAGGETT']
         #: determine if we're running the additional/optional gis validation checks that output the discrepancies fgdb
-        run_gis_validation_checks_bool = True
+        ##run_gis_validation_checks_bool = True
 
-        main(county_list, run_gis_validation_checks_bool)
+        main(list_of_counties, gis_validation)
 
     except Exception:
         e = sys.exc_info()[1]

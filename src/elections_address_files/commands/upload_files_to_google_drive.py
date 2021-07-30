@@ -1,5 +1,5 @@
 
-import os, errno
+import os
 from shutil import copyfile
 import shutil
 
@@ -12,8 +12,7 @@ def upload_files(directory, folder_name):
     try:
         os.makedirs(google_drive_parent_directory + folder_name)
     except OSError as e:
-        if e.errno != errno.EXIST:
-            raise
+        raise
 
     #: copy csv and zip files from local machine directory to corresponding google drive folder.
     ext = ('.zip', '.csv')
