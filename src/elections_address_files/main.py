@@ -2,7 +2,7 @@ import os, datetime, sys, setuptools
 from commands.assign_vista_pcts_to_sgid_addpnts import *
 from commands.validate_election_data import *
 from commands.zip_files import *
-from commands.upload_files_to_google_drive import *
+from commands.upload_files_to_drive_using_google_api import *
 
 def main(county_list, gis_validation):
     print("Begin...")
@@ -33,7 +33,7 @@ def main(county_list, gis_validation):
             validate_sgid_addresses_and_voting_precincts(fgdb_data_path, dataset_name)
 
         #: Export the flagged rows (the onces with possible issues) into a single file geodatabase.
-        export_flagged_rows_to_fgdb(directory + "\\", folder_name, county_list, dataset_name, "statewide_layer") # last param is either "individual_county_layers" or "statewide_layer"
+        export_flagged_rows_to_fgdb(directory + "\\", folder_name, county_list, dataset_name, "individual_county_layers") # last param is either "individual_county_layers" or "statewide_layer"
     else:
         print("Skipping GIS validation checks.")
 
@@ -48,6 +48,7 @@ def main(county_list, gis_validation):
     print("Done!")
     print("  Completed counties include: " + str(county_list))
 
+#: create output folder.
 def create_output_dir_with_todays_date():
     #: Create a folder based on the date (ie: Year_Month_Day = 2021_1_15)
     now = datetime.datetime.now()
