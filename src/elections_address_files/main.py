@@ -4,6 +4,9 @@ from commands.validate_election_data import *
 from commands.zip_files import *
 from commands.upload_files_to_drive_using_google_api import *
 
+#: run as batch file located here:
+# C:\Users\gbunce\Documents\projects\batch_files
+
 def main(county_list, gis_validation):
     print("Begin...")
     print("  Processing the following counties: " + str(county_list))
@@ -78,12 +81,9 @@ if __name__ == "__main__":
 
         #: create list from list_of_counties commandline string.
 
-
+        #: LIST OF COUNTIES IS NOW BEING PASSED IN FROM BATCH FILE
         #: setup params:
-        #: Get a list of county names to run this project with.
-        #: all counties, in one list.
         #list_of_counties = ['SANPETE','IRON','KANE','WEBER','SAN_JUAN','GARFIELD','RICH','SUMMIT','TOOELE','BEAVER','BOX_ELDER','CACHE','UINTAH','GRAND','WASHINGTON','MILLARD','WASATCH','JUAB','UTAH','DUCHESNE','DAGGETT','PIUTE','DAVIS','MORGAN','WAYNE','EMERY','SEVIER','CARBON','SALT_LAKE']
-        ##list_of_counties = ['DAGGETT']
         #: determine if we're running the additional/optional gis validation checks that output the discrepancies fgdb
         ##run_gis_validation_checks_bool = True
 
