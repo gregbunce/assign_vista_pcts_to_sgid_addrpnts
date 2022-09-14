@@ -36,7 +36,7 @@ def do_work_and_save_as_csv(county_name, local_vista_directory, formatted_date):
 
     sgid_addrspnts = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.LOCATION.AddressPoints'
     sgid_vista_boundaries = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.POLITICAL.VistaBallotAreas'
-    sgid_census_place_names = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.DEMOGRAPHIC.UnIncorpAreas2010_Approx'
+    sgid_census_place_names = 'C:\\Users\\gbunce\\AppData\\Roaming\\ESRI\\ArcGISPro\\Favorites\\internal@sgid@internal.agrc.utah.gov.sde\\SGID.DEMOGRAPHIC.CensusPlaces2020'
 
 
     #: Create date variables.

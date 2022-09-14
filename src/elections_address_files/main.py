@@ -2,7 +2,7 @@ import os, datetime, sys, setuptools
 from commands.assign_vista_pcts_to_sgid_addpnts import *
 from commands.validate_election_data import *
 from commands.zip_files import *
-from commands.upload_files_to_drive_using_google_api import *
+#from commands.upload_files_to_drive_using_google_api import *
 
 #: run as batch file located here:
 # C:\Users\gbunce\Documents\projects\batch_files
@@ -46,7 +46,7 @@ def main(county_list, gis_validation):
 
     #: STEP 5
     #: copy the the output data (that's in the newly created floder in step 1) to the agrc_public_share were folks can pick up the data.
-    upload_files(directory, folder_name)
+    #upload_files(directory, folder_name)
 
     print("Done!")
     print("  Completed counties include: " + str(county_list))
