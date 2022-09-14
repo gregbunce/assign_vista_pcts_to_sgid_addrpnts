@@ -90,7 +90,7 @@ def do_work_and_save_as_csv(county_name, local_vista_directory, formatted_date):
 
     # remove a few fields in the table
     print("Remove a few fields in the table")
-    arcpy.DeleteField_management("table_for_export", ["FID_sgid_addrpnts_vista", "FID_sgid_addrpnts", "AddSystem", "UTAddPtID", "FullAdd", "AddNumSuffix", "LandmarkName", "Building", "CountyID", "State", "PtLocation", "Structure", "ParcelID", "AddSource", "LoadDate", "USNG", "FID_VistaBallotAreas", "VistaID", "VersionNbr", "EffectiveDate", "AliasName", "Comments", "RcvdDate", "FID_UnIncorpAreas2010_Approx", "CountyNbr"])
+    arcpy.DeleteField_management("table_for_export", ["FID_sgid_addrpnts_vista", "FID_sgid_addrpnts", "AddSystem", "UTAddPtID", "FullAdd", "AddNumSuffix", "LandmarkName", "Building", "CountyID", "State", "PtLocation", "Structure", "ParcelID", "AddSource", "LoadDate", "USNG", "FID_VistaBallotAreas", "VistaID", "VersionNbr", "EffectiveDate", "AliasName", "Comments", "RcvdDate", "FID_CensusPlaces2020", "STATEFP20", "PLACEFP20", "PLACENS20", "GEOID20", "NAMELSAD20", "LSAD20", "CLASSFP20", "PCICBSA20", "PCINECTA20", "MTFCC20", "FUNCSTAT20", "ALAND20", "AWATER20", "INTPTLAT20", "INTPTLON20"])
 
     # upgrade geodatabase to 10.0 or greater (to allow for the alter field tool to run)
     print("Upgrading geodatbase so we can run .AlterField tool - which requires newer fgdb")
@@ -104,7 +104,7 @@ def do_work_and_save_as_csv(county_name, local_vista_directory, formatted_date):
     arcpy.AlterField_management("table_for_export", 'CountyID_1', 'CountyID', 'CountyID')
     arcpy.AlterField_management("table_for_export", 'PrecinctID', 'Precinct', 'Precinct')
     arcpy.AlterField_management("table_for_export", 'SubPrecinctID', 'SubPrecinct', 'SubPrecinct')
-    arcpy.AlterField_management("table_for_export", 'NAME20', 'CensusPlace', 'CensusPlace')
+    arcpy.AlterField_management("table_for_export", 'NAME20', 'CensusPlace2020', 'CensusPlace2020')
 
     # export the table to a text file
     print("export table to text file")
