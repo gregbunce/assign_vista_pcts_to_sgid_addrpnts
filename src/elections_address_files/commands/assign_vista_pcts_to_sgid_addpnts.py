@@ -104,7 +104,7 @@ def do_work_and_save_as_csv(county_name, local_vista_directory, formatted_date):
     arcpy.AlterField_management("table_for_export", 'CountyID_1', 'CountyID', 'CountyID')
     arcpy.AlterField_management("table_for_export", 'PrecinctID', 'Precinct', 'Precinct')
     arcpy.AlterField_management("table_for_export", 'SubPrecinctID', 'SubPrecinct', 'SubPrecinct')
-    arcpy.AlterField_management("table_for_export", 'PLACENAME', 'CensusPlace', 'CensusPlace')
+    arcpy.AlterField_management("table_for_export", 'NAME20', 'CensusPlace', 'CensusPlace')
 
     # export the table to a text file
     print("export table to text file")
